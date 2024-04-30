@@ -4,7 +4,6 @@ import {
   HomeIcon,
   MessagesSquare,
   SearchIcon,
-  User2Icon,
   UsersIcon,
 } from "lucide-react";
 import Image from "next/image";
