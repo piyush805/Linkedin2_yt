@@ -26,6 +26,7 @@ function PostForm() {
       console.log("Error creating post: ", error);
     }
   };
+
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event?.target?.files?.[0];
 

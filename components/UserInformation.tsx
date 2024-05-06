@@ -6,7 +6,7 @@ import { Button } from "./ui/button";
 
 async function UserInformation() {
   const user = await currentUser();
-  console.log("this", user?.firstName);
+
   const firstName = user?.firstName;
   const lastName = user?.lastName;
   const imageUrl = user?.imageUrl;
