@@ -7,7 +7,7 @@ export interface IPostBase {
   text: string;
   imageUrl?: string;
   comments?: IComment[];
-  likes: string[];
+  likes?: string[];
 }
 
 export interface IPost extends IPostBase, Document {
@@ -53,7 +53,7 @@ PostSchema.methods.likePost = async function (userId: string) {
   try {
     await this.updateOne({ $addToSet: { likes: userId } });
   } catch (error) {
-    throw new Error("Error when liking post ", error);
+    console.log("error when unliking post ", error);
   }
 };
 
@@ -120,4 +120,3 @@ PostSchema.methods.getAllPosts = async function () {
 export const Post =
   (models.Post as IPostModel) ||
   mongoose.model<IPostDocument, IPostModel>("Post", PostSchema);
-
