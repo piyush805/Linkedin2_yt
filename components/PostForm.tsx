@@ -5,6 +5,8 @@ import { Button } from "./ui/button";
 import { ImageIcon, XIcon } from "lucide-react";
 import { ChangeEvent, useRef, useState } from "react";
 import createPostAction from "@/actions/createPostAction";
+import Image from "next/image";
+import { toast } from "sonner";
 
 function PostForm() {
   const ref = useRef<HTMLFormElement>(null);
@@ -41,8 +43,13 @@ function PostForm() {
         ref={ref}
         action={(formData) => {
           // Handle form submission with server action
-          handlePostAction(formData);
+          const promise = handlePostAction(formData);
           // Toast notification  based on the promise above
+          toast.promise(promise, {
+            loading: "Creating post...",
+            success: "Post created",
+            error: "Failed to create post",
+          });
         }}
         className="p-3 bg-white rounded-lg border"
       >
@@ -78,12 +85,17 @@ function PostForm() {
         {/* Preview */}
         {preview && (
           <div className="mt-3">
-            <img src={preview} alt="Preview" className="w-full object-cover" />
+            <Image
+              src={preview}
+              alt="Preview"
+              className="w-full object-cover"
+            />
           </div>
         )}
         <div className="flex justify-end mt-2 space-x-2">
           <Button
             type="button"
+            variant={preview ? "secondary" : "outline"}
             onClick={() => {
               fileInputRef.current?.click();
             }}
