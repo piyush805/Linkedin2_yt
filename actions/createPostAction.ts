@@ -2,29 +2,30 @@
 
 import { AddPostRequestBody } from "@/app/api/posts/route";
 import generateSASToken, { containerName } from "@/lib/generateSASToken";
+import { GridFSBucket, MongoClient } from "mongodb";
+import { GridFsStorage } from "multer-gridfs-storage";
+import multer from "multer";
 import { Post } from "@/mongodb/models/post";
 import { IUser } from "@/types/user";
 import { BlobServiceClient } from "@azure/storage-blob";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 
 export default async function createPostAction(formData: FormData) {
-  //   auth().protect()
   const user = await currentUser();
-  if (!user) {
-    throw new Error("User not authenticated");
-  }
   const postInput = formData.get("postInput") as string;
   const image = formData.get("image") as File;
-
-  let image_url: string | undefined = undefined;
+  let image_url = undefined;
 
   if (!postInput) {
-    throw new Error("post input is required");
+    throw new Error("Post input is required");
   }
 
-  // define user
+  if (!user?.id) {
+    throw new Error("User not authenticated");
+  }
+
   const userDB: IUser = {
     userId: user.id,
     userImage: user.imageUrl,
@@ -61,16 +62,16 @@ export default async function createPostAction(formData: FormData) {
         imageUrl: image_url,
       };
     } else {
-      // 1. create a post in database without image
       const body: AddPostRequestBody = {
         user: userDB,
         text: postInput,
       };
+
       await Post.create(body);
     }
   } catch (error: any) {
-    throw new Error("Failed to create post ", error);
+    throw new Error("Failed to create post", error);
   }
 
-  revalidatePath("/"); // update the data on this path-page because we have updated it
+  revalidatePath("/");
 }

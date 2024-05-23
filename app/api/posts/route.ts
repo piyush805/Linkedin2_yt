@@ -1,7 +1,6 @@
 import connectDB from "@/mongodb/db";
 import { IPostBase, Post } from "@/mongodb/models/post";
 import { IUser } from "@/types/user";
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 export interface AddPostRequestBody {
@@ -11,7 +10,6 @@ export interface AddPostRequestBody {
 }
 
 export async function POST(request: Request) {
-  auth().protect(); // Protect the route with clerk authentication
   try {
     await connectDB();
     const { user, text, imageUrl }: AddPostRequestBody = await request.json();
@@ -37,6 +35,7 @@ export async function GET(request: Request) {
   try {
     await connectDB();
     const posts = await Post.getAllPosts();
+    return NextResponse.json(posts);
   } catch (err) {
     return NextResponse.json(
       { error: "An error occurred while fetching posts" },

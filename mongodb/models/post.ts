@@ -1,6 +1,7 @@
-import { IUser } from "@/types/user";
+// post.ts
 import mongoose, { Schema, Document, models, Model } from "mongoose";
 import { Comment, IComment, ICommentBase } from "./comment";
+import { IUser } from "@/types/user";
 
 export interface IPostBase {
   user: IUser;
@@ -11,6 +12,7 @@ export interface IPostBase {
 }
 
 export interface IPost extends IPostBase, Document {
+  _id: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -24,24 +26,26 @@ interface IPostMethods {
   removePost(): Promise<void>;
 }
 
+// Define the static methods
 interface IPostStatics {
   getAllPosts(): Promise<IPostDocument[]>;
 }
 
-export interface IPostDocument extends IPost, IPostMethods {} // singular instance of post
-interface IPostModel extends IPostStatics, Model<IPostDocument> {} // all posts
+// Merge the document methods, and static methods with IPost
+export interface IPostDocument extends IPost, IPostMethods {}
+interface IPostModel extends IPostStatics, Model<IPostDocument> {}
 
 const PostSchema = new Schema<IPostDocument>(
   {
     user: {
       userId: { type: String, required: true },
-      userName: { type: String, required: true },
+      userImage: { type: String, required: true },
       firstName: { type: String, required: true },
       lastName: { type: String },
     },
     text: { type: String, required: true },
     imageUrl: { type: String },
-    comments: { type: [Schema.Types.ObjectId], refId: "Comment", default: [] }, // array of Id from the Comment Schema Objects : fetch with a Populate call - so it becomes like an INNER JOIN
+    comments: { type: [Schema.Types.ObjectId], ref: "Comment", default: [] },
     likes: { type: [String] },
   },
   {
@@ -53,7 +57,7 @@ PostSchema.methods.likePost = async function (userId: string) {
   try {
     await this.updateOne({ $addToSet: { likes: userId } });
   } catch (error) {
-    console.log("error when unliking post ", error);
+    console.log("error when liking post", error);
   }
 };
 
@@ -61,15 +65,15 @@ PostSchema.methods.unlikePost = async function (userId: string) {
   try {
     await this.updateOne({ $pull: { likes: userId } });
   } catch (error) {
-    console.log("error when unliking post ", error);
+    console.log("error when unliking post", error);
   }
 };
 
-PostSchema.methods.removePost = async function (userId: string) {
+PostSchema.methods.removePost = async function () {
   try {
     await this.model("Post").deleteOne({ _id: this._id });
   } catch (error) {
-    console.log("error when removing post ", error);
+    console.log("error when removing post", error);
   }
 };
 
@@ -77,33 +81,25 @@ PostSchema.methods.commentOnPost = async function (commentToAdd: ICommentBase) {
   try {
     const comment = await Comment.create(commentToAdd);
     this.comments.push(comment._id);
+    await this.save();
+    console.log("here comment", this);
   } catch (error) {
-    console.log("error when commenting on  post ", error);
+    console.log("error when commenting on post", error);
   }
 };
 
-PostSchema.methods.getAllComments = async function () {
-  try {
-    await this.populate({
-      path: "comments",
-      options: { sort: { createdAt: -1 } }, // sort comments by newest first
-    });
-    return this.comments;
-  } catch (error) {
-    console.log("error when getting all comments ", error);
-  }
-};
-
-PostSchema.methods.getAllPosts = async function () {
+PostSchema.statics.getAllPosts = async function () {
   try {
     const posts = await this.find()
-      .sort({ createAt: -1 })
+      .sort({ createdAt: -1 })
       .populate({
         path: "comments",
+
         options: { sort: { createdAt: -1 } },
       })
-      // similarly chain other schema like 'Likes'
-      .lean(); // converts mongoose object to plain JS object
+      .populate("likes")
+      .lean(); // lean() returns a plain JS object instead of a mongoose document
+
     return posts.map((post: IPostDocument) => ({
       ...post,
       _id: post._id.toString(),
@@ -113,7 +109,20 @@ PostSchema.methods.getAllPosts = async function () {
       })),
     }));
   } catch (error) {
-    console.log("error when getting all posts ", error);
+    console.log("error when getting all posts", error);
+  }
+};
+
+PostSchema.methods.getAllComments = async function () {
+  try {
+    await this.populate({
+      path: "comments",
+
+      options: { sort: { createdAt: -1 } },
+    });
+    return this.comments;
+  } catch (error) {
+    console.log("error when getting all comments", error);
   }
 };
 

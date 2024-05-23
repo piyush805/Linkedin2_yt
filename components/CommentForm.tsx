@@ -2,9 +2,10 @@
 
 import createCommentAction from "@/actions/createCommentAction";
 import { useUser } from "@clerk/nextjs";
-import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
+
 import { useRef } from "react";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 function CommentForm({ postId }: { postId: string }) {
   const { user } = useUser();
@@ -45,7 +46,7 @@ function CommentForm({ postId }: { postId: string }) {
           {user?.lastName?.charAt(0)}
         </AvatarFallback>
       </Avatar>
-      <div className="flex flex-1 bg-white border rounded-full px-2 py-2">
+      <div className="flex flex-1 bg-white border rounded-full px-3 py-2">
         <input
           type="text"
           name="commentInput"

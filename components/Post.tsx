@@ -1,18 +1,20 @@
-import { IPostDocument } from "@/mongodb/models/post";
-import { useUser } from "@clerk/nextjs";
-import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
-import TimeAgo from "react-timeago";
-import React from "react";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+"use client";
+
 import { Trash2 } from "lucide-react";
-import deletePostAction from "@/actions/deletePostAction";
-import Image from "next/image";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { IPostDocument } from "@/mongodb/models/post";
 import PostOptions from "./PostOptions";
+import Image from "next/image";
+import deletePostAction from "@/actions/deletePostAction";
+import { useUser } from "@clerk/nextjs";
+import { Button } from "./ui/button";
+import ReactTimeago from "react-timeago";
+import { Badge } from "./ui/badge";
 import { toast } from "sonner";
 
 function Post({ post }: { post: IPostDocument }) {
   const { user } = useUser();
+
   const isAuthor = user?.id === post.user.userId;
   return (
     <div className="bg-white rounded-md border">
@@ -26,6 +28,7 @@ function Post({ post }: { post: IPostDocument }) {
             </AvatarFallback>
           </Avatar>
         </div>
+
         <div className="flex justify-between flex-1">
           <div>
             <p className="font-semibold">
@@ -40,20 +43,21 @@ function Post({ post }: { post: IPostDocument }) {
               @{post.user.firstName}
               {post.user.firstName}-{post.user.userId.toString().slice(-4)}
             </p>
+
             <p className="text-xs text-gray-400">
-              <TimeAgo date={new Date(post.createdAt)} />
+              <ReactTimeago date={new Date(post.createdAt)} />
             </p>
           </div>
+
           {isAuthor && (
             <Button
               variant="outline"
               onClick={() => {
-                const promise = deletePostAction(post._id);
-                // Toast
+                const promise = deletePostAction(post._id.toString());
                 toast.promise(promise, {
                   loading: "Deleting post...",
-                  success: "Post deleted",
-                  error: "Failed to delete post",
+                  success: "Post deleted!",
+                  error: "Error deleting post",
                 });
               }}
             >
@@ -62,9 +66,11 @@ function Post({ post }: { post: IPostDocument }) {
           )}
         </div>
       </div>
-      <div>
-        <p className="px-4 pb-2 mt-2">{post.text} </p>
-        {/* If image is uploaded put it here */}
+
+      <div className="">
+        <p className="px-4 pb-2 mt-2">{post.text}</p>
+
+        {/* If image uploaded put it here... */}
         {post.imageUrl && (
           <Image
             src={post.imageUrl}
@@ -75,7 +81,7 @@ function Post({ post }: { post: IPostDocument }) {
           />
         )}
       </div>
-      {/* PostOptions */}
+
       <PostOptions post={post} />
     </div>
   );

@@ -82,7 +82,7 @@ function PostOptions({ post }: { post: IPostDocument }) {
               onClick={() => setIsCommentsOpen(!isCommentsOpen)}
               className="text-xs text-gray-500 cursor-pointer hover:underline"
             >
-              {post.comments.length} likes
+              {post.comments.length} comments
             </p>
           )}
         </div>
@@ -130,7 +130,7 @@ function PostOptions({ post }: { post: IPostDocument }) {
       {isCommentsOpen && (
         <div className="p-4 ">
           <SignedIn>
-            <CommentForm postId={post._id} />
+            <CommentForm postId={post._id.toString()} />
           </SignedIn>
           <CommentFeed post={post} />
         </div>

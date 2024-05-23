@@ -9,6 +9,7 @@ export interface ICommentBase {
 
 // For the server side
 export interface IComment extends Document, ICommentBase {
+  _id: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,7 +18,7 @@ const CommentSchema = new Schema<IComment>(
   {
     user: {
       userId: { type: String, required: true },
-      userName: { type: String, required: true },
+      userImage: { type: String, required: true },
       firstName: { type: String, required: true },
       lastName: { type: String },
     },
