@@ -18,10 +18,10 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 connectDB();
 
 // Validate that environment variables are available and type assert to string
-const accessKeyId = process.env.AWS_KEY_ID as string;
-const secretAccessKey = process.env.AWS_SECRET_KEY as string;
-const region = process.env.AWS_S3_REGION as string;
-const bucketName = process.env.AWS_BUCKET_NAME as string;
+const accessKeyId = process.env.MY_AWS_KEY_ID as string;
+const secretAccessKey = process.env.MY_AWS_SECRET_KEY as string;
+const region = process.env.MY_AWS_S3_REGION as string;
+const bucketName = process.env.MY_AWS_BUCKET_NAME as string;
 
 if (!accessKeyId || !secretAccessKey || !region || !bucketName) {
   throw new Error(
