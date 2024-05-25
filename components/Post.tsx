@@ -82,7 +82,7 @@ function Post({ post }: { post: IPostDocument }) {
         )}
       </div>
 
-      <PostOptions post={post} />
+      <PostOptions postId={post._id.toString()} post={post} />
     </div>
   );
 }

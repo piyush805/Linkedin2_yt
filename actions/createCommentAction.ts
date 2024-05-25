@@ -6,6 +6,7 @@ import { Post } from "@/mongodb/models/post";
 
 import { IUser } from "@/types/user";
 import { currentUser } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 
 export default async function createCommentAction(
   postId: string,
@@ -37,11 +38,12 @@ export default async function createCommentAction(
   const post = await Post.findById(postId);
 
   if (!post) {
-    throw new Error("Post new found");
+    throw new Error("Post not found");
   }
 
   try {
     await post.commentOnPost(comment);
+    revalidatePath("/");
   } catch (error) {
     throw new Error("An error occurred while adding comment");
   }

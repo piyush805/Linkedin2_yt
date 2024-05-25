@@ -14,6 +14,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "linkedincloneyt.blob.core.windows.net",
       },
+      {
+        protocol: "https",
+        hostname: "linkedin-uploads1.s3.eu-north-1.amazonaws.com",
+      },
     ],
   },
 };

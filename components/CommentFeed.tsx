@@ -13,7 +13,7 @@ function CommentFeed({ post }: { post: IPostDocument }) {
   return (
     <div className="mt-3 space-y-2">
       {post?.comments?.map((comment) => (
-        <div key={comment._id.toString()} className="flex space-x-1">
+        <div key={comment._id} className="flex space-x-1">
           <Avatar>
             <AvatarImage src={comment.user.userImage} />
             <AvatarFallback>
@@ -22,7 +22,7 @@ function CommentFeed({ post }: { post: IPostDocument }) {
             </AvatarFallback>
           </Avatar>
 
-          <div className="bg-gray-100 px-4 py-2 rounded-md w-full sm:w-auto md:min-w-[90%]">
+          <div className="bg-gray-100 px-4 py-2 rounded-md w-full sm:w-auto md:min-w-[300px]">
             <div className="flex justify-between">
               <div>
                 <p className="font-semibold">

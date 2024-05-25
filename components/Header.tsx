@@ -21,7 +21,7 @@ function Header() {
         height={40}
         alt="logo"
       />
-      <div className="flex-1">
+      <div className="flex-1 min-w-10">
         <form className="flex items-center space-x-1 bg-gray-100 p-2 rounded-md flex-1 mx-2 max-w-96">
           <SearchIcon className="h-4 text-gray-600 " />
           <input

@@ -7,19 +7,6 @@ if (!connectionString) {
 }
 // Enable Mongoose debugging for more insights
 mongoose.set("debug", true);
-// const connectDB = async () => {
-//   if (mongoose.connection?.readyState >= 1) {
-//     // console.log("---- Already connected to MongoDB ----")
-//     return;
-//   }
-
-//   try {
-//     console.log("---- Connecting to MongoDB ----", connectionString);
-//     await mongoose.connect(connectionString);
-//   } catch (error) {
-//     console.log("Error connecting to MongoDB: ", error);
-//   }
-// };
 
 const connectdb = async () => {
   if (mongoose.connection?.readyState >= 1) {

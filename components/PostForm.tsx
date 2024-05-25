@@ -85,7 +85,11 @@ function PostForm() {
         {/* Preview */}
         {preview && (
           <div className="mt-3">
-            <img src={preview} alt="Preview" className="w-full object-cover" />
+            <Image
+              src={preview}
+              alt="Preview"
+              className="w-full object-cover"
+            />
           </div>
         )}
         <div className="flex justify-end mt-2 space-x-2">

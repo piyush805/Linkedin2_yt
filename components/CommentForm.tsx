@@ -2,39 +2,42 @@
 
 import createCommentAction from "@/actions/createCommentAction";
 import { useUser } from "@clerk/nextjs";
-
 import { useRef } from "react";
-import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { toast } from "sonner";
 
 function CommentForm({ postId }: { postId: string }) {
   const { user } = useUser();
   const ref = useRef<HTMLFormElement>(null);
 
+  const createCommentActionWithPostId = createCommentAction.bind(null, postId);
+
   const handleCommentAction = async (formData: FormData): Promise<void> => {
     const formDataCopy = formData;
     ref.current?.reset();
 
-    const createCommentActionWithPostId = createCommentAction.bind(
-      null, // this
-      postId
-    ); // this changes the function signature of createCommentAction
     try {
-      // server action
+      if (!user?.id) {
+        throw new Error("User not authenticated");
+      }
+
       await createCommentActionWithPostId(formDataCopy);
     } catch (error) {
       console.error(`Error creating comment: ${error}`);
+
+      // Display toast
     }
   };
+
   return (
     <form
       ref={ref}
       action={(formData) => {
         const promise = handleCommentAction(formData);
         toast.promise(promise, {
-          loading: "Creating comment...",
-          success: "Comment created",
-          error: "Failed to create comment",
+          loading: "Posting comment...",
+          success: "Comment Posted!",
+          error: "Error creating comment",
         });
       }}
       className="flex items-center space-x-1"
@@ -46,6 +49,7 @@ function CommentForm({ postId }: { postId: string }) {
           {user?.lastName?.charAt(0)}
         </AvatarFallback>
       </Avatar>
+
       <div className="flex flex-1 bg-white border rounded-full px-3 py-2">
         <input
           type="text"

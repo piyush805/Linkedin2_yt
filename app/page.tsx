@@ -9,12 +9,11 @@ import connectDB from "@/mongodb/db";
 export const revalidate = 0;
 
 export default async function Home() {
-  console.log("here");
   await connectDB();
   const posts = await Post.getAllPosts();
 
   return (
-    <div className="grid grid-cols-8 mt-5 sm:px-5">
+    <div className=" mt-5 sm:px-5">
       <section className="hidden md:inline md:col-span-2">
         <UserInformation posts={posts} />
       </section>

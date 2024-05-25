@@ -1,22 +1,54 @@
 "use server";
 
 import { AddPostRequestBody } from "@/app/api/posts/route";
-import generateSASToken, { containerName } from "@/lib/generateSASToken";
-import { GridFSBucket, MongoClient } from "mongodb";
-import { GridFsStorage } from "multer-gridfs-storage";
-import multer from "multer";
+import multer, { StorageEngine } from "multer";
 import { Post } from "@/mongodb/models/post";
 import { IUser } from "@/types/user";
-import { BlobServiceClient } from "@azure/storage-blob";
 import { currentUser } from "@clerk/nextjs/server";
-import { randomUUID } from "crypto";
+import crypto from "crypto";
 import { revalidatePath } from "next/cache";
+import connectDB from "@/mongodb/db";
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+connectDB();
+
+// Validate that environment variables are available and type assert to string
+const accessKeyId = process.env.AWS_KEY_ID as string;
+const secretAccessKey = process.env.AWS_SECRET_KEY as string;
+const region = process.env.AWS_REGION as string;
+const bucketName = process.env.AWS_BUCKET_NAME as string;
+
+if (!accessKeyId || !secretAccessKey || !region || !bucketName) {
+  throw new Error(
+    "Missing required environment variables for AWS configuration"
+  );
+}
+
+// Configure AWS SDK with your credentials
+const s3 = new S3Client({
+  region: region,
+  credentials: {
+    accessKeyId: accessKeyId,
+    secretAccessKey: secretAccessKey,
+  },
+});
+
+function randomImageName(bytes = 32) {
+  crypto.randomBytes(bytes).toString("hex");
+}
+
+const storage: StorageEngine = multer.memoryStorage();
 
 export default async function createPostAction(formData: FormData) {
   const user = await currentUser();
   const postInput = formData.get("postInput") as string;
   const image = formData.get("image") as File;
-  let image_url = undefined;
+  let image_url: string = "";
 
   if (!postInput) {
     throw new Error("Post input is required");
@@ -32,45 +64,42 @@ export default async function createPostAction(formData: FormData) {
     firstName: user.firstName || "",
     lastName: user.lastName || "",
   };
+
   try {
-    if (image.size > 0) {
-      // 1. upload image if there is one - MS Blob storage
-      console.log("Uploading image to Azure Blob Storage...", image);
-      const accountName = process.env.AZURE_STORAGE_NAME;
-      const sasToken = await generateSASToken();
-      const blobServiceClient = new BlobServiceClient(
-        `https://${accountName}.blob.core.windows.net?${sasToken}`
-      );
-      const containerClient =
-        blobServiceClient.getContainerClient(containerName);
+    if (image) {
+      // Convert the File to a Buffer using arrayBuffer and Buffer.from
+      const imageBuffer = Buffer.from(await image.arrayBuffer());
 
-      const timestamp = new Date().getTime();
-      const file_name = `${randomUUID()}_${timestamp}.png`;
-
-      const blockBlobClient = containerClient.getBlockBlobClient(file_name);
-
-      const imageBuffer = await image.arrayBuffer();
-      const res = await blockBlobClient.uploadData(imageBuffer);
-      image_url = res._response.request.url;
-
-      console.log("File uploaded successfully!", image_url);
-
-      // 2. create a post in database
-      const body: AddPostRequestBody = {
-        user: userDB,
-        text: postInput,
-        imageUrl: image_url,
+      // Data to send to S3 bucket
+      const imageName = `IMG_${randomImageName()}`;
+      const params = {
+        Bucket: bucketName,
+        Key: imageName,
+        Body: imageBuffer,
       };
-    } else {
-      const body: AddPostRequestBody = {
-        user: userDB,
-        text: postInput,
-      };
+      const putCommand = new PutObjectCommand(params); // command to create object in bucket
+      await s3.send(putCommand);
 
-      await Post.create(body);
+      // create a signed public URL from the uploaded image name
+      // and to save the same in post_image in DB
+      const getObjectParams = {
+        Bucket: bucketName,
+        Key: imageName,
+      };
+      const getCommand = new GetObjectCommand(getObjectParams);
+      image_url = await getSignedUrl(s3, getCommand);
     }
+
+    // Create the post in the database
+    const body: AddPostRequestBody = {
+      user: userDB,
+      text: postInput,
+      imageUrl: image_url || "",
+    };
+
+    await Post.create(body);
   } catch (error: any) {
-    throw new Error("Failed to create post", error);
+    throw new Error("Failed to create post: " + error.message);
   }
 
   revalidatePath("/");

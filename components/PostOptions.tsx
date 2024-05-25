@@ -1,17 +1,24 @@
 "use client";
-import { IPostDocument } from "@/mongodb/models/post";
-import { SignedIn, useUser } from "@clerk/nextjs";
-import React, { useEffect, useState } from "react";
-import { Button } from "./ui/button";
+
+import { useEffect, useState } from "react";
 import { MessageCircle, Repeat2, Send, ThumbsUpIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
-import CommentFeed from "./CommentFeed";
 import CommentForm from "./CommentForm";
+import CommentFeed from "./CommentFeed";
+import { useUser } from "@clerk/nextjs";
 import { LikePostRequestBody } from "@/app/api/posts/[post_id]/like/route";
+import { IPostDocument } from "@/mongodb/models/post";
+import { cn } from "@/lib/utils";
 import { UnlikePostRequestBody } from "@/app/api/posts/[post_id]/unlike/route";
+import { Button } from "./ui/button";
 import { toast } from "sonner";
 
-function PostOptions({ post }: { post: IPostDocument }) {
+function PostOptions({
+  postId,
+  post,
+}: {
+  postId: string;
+  post: IPostDocument;
+}) {
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const { user } = useUser();
   const [liked, setLiked] = useState(false);
@@ -22,7 +29,8 @@ function PostOptions({ post }: { post: IPostDocument }) {
       setLiked(true);
     }
   }, [post, user]);
-  const likesOrUnlikePost = async () => {
+
+  const likeOrUnlikePost = async () => {
     if (!user?.id) {
       throw new Error("User not authenticated");
     }
@@ -42,32 +50,34 @@ function PostOptions({ post }: { post: IPostDocument }) {
     setLikes(newLikes);
 
     const response = await fetch(
-      `/api/posts/${post._id}/${liked ? "unlike" : "like"}`,
+      `/api/posts/${postId}/${liked ? "unlike" : "like"}`,
       {
         method: "POST",
         headers: {
-          "Content-type": "application/json",
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ ...body }),
       }
     );
+
     if (!response.ok) {
       setLiked(originalLiked);
-      setLikes(originalLikes);
-      throw new Error("Failed to like or unlike post");
+      throw new Error("Failed to like post");
     }
-    const fetchLikesResponse = await fetch(`/api/posts/${post._id}/like`);
+
+    const fetchLikesResponse = await fetch(`/api/posts/${postId}/like`);
     if (!fetchLikesResponse.ok) {
-      setLiked(originalLiked);
       setLikes(originalLikes);
-      toast.error("Failed to fetch likes");
       throw new Error("Failed to fetch likes");
     }
-    const newLikedData = await fetchLikesResponse.json();
-    setLikes(newLikedData);
+
+    const newLikesData = await fetchLikesResponse.json();
+
+    setLikes(newLikesData);
   };
+
   return (
-    <div>
+    <div className="">
       <div className="flex justify-between p-4">
         <div>
           {likes && likes.length > 0 && (
@@ -76,6 +86,7 @@ function PostOptions({ post }: { post: IPostDocument }) {
             </p>
           )}
         </div>
+
         <div>
           {post?.comments && post.comments.length > 0 && (
             <p
@@ -87,24 +98,20 @@ function PostOptions({ post }: { post: IPostDocument }) {
           )}
         </div>
       </div>
+
       <div className="flex p-2 justify-between px-2 border-t">
         <Button
           variant="ghost"
           className="postButton"
-          onClick={() => {
-            const promise = likesOrUnlikePost();
-            toast.promise(promise, {
-              loading: liked ? "Unliking post..." : "Liking post...",
-              success: liked ? "Post unliked..." : "Post liked",
-              error: liked ? "Failed to unlike" : "Failed to like post",
-            });
-          }}
+          onClick={likeOrUnlikePost}
         >
+          {/* If user has liked the post, show filled thumbs up icon */}
           <ThumbsUpIcon
             className={cn("mr-1", liked && "text-[#4881c2] fill-[#4881c2]")}
           />
           Like
         </Button>
+
         <Button
           variant="ghost"
           className="postButton"
@@ -118,20 +125,21 @@ function PostOptions({ post }: { post: IPostDocument }) {
           />
           Comment
         </Button>
-        <Button variant="ghost" className="postButton">
+
+        {/* <Button variant="ghost" className="postButton">
           <Repeat2 className="mr-1" />
           Repost
-        </Button>
-        <Button variant="ghost" className="postButton">
+        </Button> */}
+
+        {/* <Button variant="ghost" className="postButton">
           <Send className="mr-1" />
           Send
-        </Button>
+        </Button> */}
       </div>
+
       {isCommentsOpen && (
-        <div className="p-4 ">
-          <SignedIn>
-            <CommentForm postId={post._id.toString()} />
-          </SignedIn>
+        <div className="p-4">
+          {user?.id && <CommentForm postId={postId} />}
           <CommentFeed post={post} />
         </div>
       )}

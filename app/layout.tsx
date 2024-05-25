@@ -17,15 +17,15 @@ export default async function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className="min-h-screen flex flex-col">
+        <body className="min-h-screen flex flex-col w-full ">
           <Toaster position="bottom-left" />
 
           <header className="border-b sticky top-0 bg-white z-50">
             <Header />
           </header>
 
-          <div className=" bg-[#F4F2ED] flex-1 w-full">
-            <main className="max-w-6xl mx-auto">{children}</main>
+          <div className=" bg-[#F4F2ED] flex-1 w-full ">
+            <main className="sm:max-w-2xl mx-auto">{children}</main>
           </div>
         </body>
       </html>
