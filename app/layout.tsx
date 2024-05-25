@@ -25,7 +25,7 @@ export default async function RootLayout({
           </header>
 
           <div className=" bg-[#F4F2ED] flex-1 w-full ">
-            <main className="sm:max-w-2xl mx-auto">{children}</main>
+            <main className="sm:max-w-6xl mx-auto">{children}</main>
           </div>
         </body>
       </html>

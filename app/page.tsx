@@ -13,7 +13,7 @@ export default async function Home() {
   const posts = await Post.getAllPosts();
 
   return (
-    <div className=" mt-5 sm:px-5">
+    <div className=" flex mt-5 sm:px-5">
       <section className="hidden md:inline md:col-span-2">
         <UserInformation posts={posts} />
       </section>

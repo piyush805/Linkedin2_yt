@@ -20,7 +20,7 @@ connectDB();
 // Validate that environment variables are available and type assert to string
 const accessKeyId = process.env.AWS_KEY_ID as string;
 const secretAccessKey = process.env.AWS_SECRET_KEY as string;
-const region = process.env.AWS_REGION as string;
+const region = process.env.AWS_S3_REGION as string;
 const bucketName = process.env.AWS_BUCKET_NAME as string;
 
 if (!accessKeyId || !secretAccessKey || !region || !bucketName) {

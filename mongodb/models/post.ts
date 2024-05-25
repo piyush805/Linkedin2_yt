@@ -82,7 +82,6 @@ PostSchema.methods.commentOnPost = async function (commentToAdd: ICommentBase) {
     const comment = await Comment.create(commentToAdd);
     this.comments.push(comment._id);
     await this.save();
-    console.log("here comment", this);
   } catch (error) {
     console.log("error when commenting on post", error);
   }
