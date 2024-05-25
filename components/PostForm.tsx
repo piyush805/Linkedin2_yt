@@ -89,6 +89,8 @@ function PostForm() {
               src={preview}
               alt="Preview"
               className="w-full object-cover"
+              width={500}
+              height={500}
             />
           </div>
         )}

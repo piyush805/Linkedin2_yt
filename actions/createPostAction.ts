@@ -39,7 +39,7 @@ const s3 = new S3Client({
 });
 
 function randomImageName(bytes = 32) {
-  crypto.randomBytes(bytes).toString("hex");
+  return crypto.randomBytes(bytes).toString("hex");
 }
 
 const storage: StorageEngine = multer.memoryStorage();
@@ -66,7 +66,7 @@ export default async function createPostAction(formData: FormData) {
   };
 
   try {
-    if (image) {
+    if (image.size > 0) {
       // Convert the File to a Buffer using arrayBuffer and Buffer.from
       const imageBuffer = Buffer.from(await image.arrayBuffer());
 
@@ -88,19 +88,28 @@ export default async function createPostAction(formData: FormData) {
       };
       const getCommand = new GetObjectCommand(getObjectParams);
       image_url = await getSignedUrl(s3, getCommand);
+
+      const body: AddPostRequestBody = {
+        user: userDB,
+        text: postInput,
+        imageUrl: image_url || "",
+      };
+      await Post.create(body);
+    } else {
+      const body: AddPostRequestBody = {
+        user: userDB,
+        text: postInput,
+      };
+      await Post.create(body);
     }
 
-    // Create the post in the database
-    const body: AddPostRequestBody = {
-      user: userDB,
-      text: postInput,
-      imageUrl: image_url || "",
-    };
-
-    await Post.create(body);
+    // Revalidate the path to ensure the post appears on the homepage
+    await revalidatePath("/");
   } catch (error: any) {
+    // Log the error for debugging purposes
+    console.error("Failed to create post:", error);
+
+    // Handle the error without sending multiple responses
     throw new Error("Failed to create post: " + error.message);
   }
-
-  revalidatePath("/");
 }
